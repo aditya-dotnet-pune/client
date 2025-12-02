@@ -51,10 +51,12 @@ const ComplianceReport = () => {
       return { label: 'Overused', color: '#ea580c', bg: '#fff7ed', icon: AlertCircle };
     }
     
-    if (gap > 0) {
-      return { label: 'Unused', color: '#ca8a04', bg: '#fefce8', icon: AlertCircle }; // Yellow/Gold for unused
+    if (gap == license.totalEntitlements) {
+      return { label: 'Unused', color: '#0422caff', bg: '#fefce8', icon: AlertCircle }; // Yellow/Gold for unused
     }
-
+    else if(gap > 0){
+      return { label: 'Underused', color: '#accc1eff', bg: '#fefce8', icon: AlertCircle };
+    }
     return { label: 'Compliant', color: '#16a34a', bg: '#f0fdf4', icon: CheckCircle };
   };
 
@@ -114,7 +116,7 @@ const ComplianceReport = () => {
       <div className="header">
         <div>
           <h1>Compliance Report</h1>
-          <p>Detailed breakdown of license usage vs ownership.</p>
+        
         </div>
         <div className="refresh-indicator">
           {isRefreshing ? (
@@ -159,7 +161,7 @@ const ComplianceReport = () => {
                   <td className="numeric-cell" style={{ fontWeight: 600 }}>{l.totalEntitlements}</td>
                   <td className="numeric-cell">{l.assignedLicenses}</td>
                   <td className={`numeric-cell ${gap < 0 ? 'gap-neg' : (gap > 0 ? 'gap-pos' : 'gap-zero')}`}>
-                    {gap > 0 ? `+${gap}` : gap}
+                    {gap > 0 ? `${gap}` : Math.abs(gap)}
                   </td>
                   <td>
                     <span 

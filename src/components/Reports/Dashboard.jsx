@@ -41,113 +41,68 @@ const Dashboard = () => {
     );
   }
 
+  // Helper for Currency Formatting
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
   return (
     <div className="dashboard-container">
       <style>{`
-        .dashboard-container {
-          padding: 2rem;
-        }
-        .dashboard-header {
-          margin-bottom: 2rem;
-        }
-        .dashboard-header h1 {
-          font-size: 1.875rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0;
-        }
-        .dashboard-header p {
-          color: #6b7280;
-          margin-top: 0.5rem;
-        }
-        .stats-grid {
-          display: grid;
-          grid-template-columns: repeat(1, 1fr);
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-        @media (min-width: 768px) {
-          .stats-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (min-width: 1024px) {
-          .stats-grid { grid-template-columns: repeat(4, 1fr); }
-        }
+        .dashboard-container { padding: 2rem; }
+        .dashboard-header { margin-bottom: 2rem; }
+        .dashboard-header h1 { font-size: 1.875rem; font-weight: 700; color: #1f2937; margin: 0; }
+        .dashboard-header p { color: #6b7280; margin-top: 0.5rem; }
+        .stats-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         
-        .table-card {
-          background-color: white;
-          border-radius: 0.75rem;
-          box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-          border: 1px solid #f3f4f6;
-          overflow: hidden;
-        }
-        .table-header {
-          padding: 1.5rem;
-          border-bottom: 1px solid #f3f4f6;
-        }
-        .table-header h2 {
-          font-size: 1.125rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin: 0;
-        }
-        .data-table {
-          width: 100%;
-          border-collapse: collapse;
-          text-align: left;
-        }
-        .data-table th {
-          background-color: #f9fafb;
-          color: #6b7280;
-          font-size: 0.875rem;
-          font-weight: 500;
-          padding: 1rem 1.5rem;
-        }
-        .data-table td {
-          padding: 1rem 1.5rem;
-          border-bottom: 1px solid #f3f4f6;
-          color: #1f2937;
-        }
-        .data-table tr:last-child td {
-          border-bottom: none;
-        }
-        .data-table tr:hover {
-          background-color: #f9fafb;
-        }
+        .table-card { background-color: white; border-radius: 0.75rem; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); border: 1px solid #f3f4f6; overflow: hidden; }
+        .table-header { padding: 1.5rem; border-bottom: 1px solid #f3f4f6; }
+        .table-header h2 { font-size: 1.125rem; font-weight: 700; color: #1f2937; margin: 0; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .data-table th { background-color: #f9fafb; color: #6b7280; font-size: 0.875rem; font-weight: 500; padding: 1rem 1.5rem; }
+        .data-table td { padding: 1rem 1.5rem; border-bottom: 1px solid #f3f4f6; color: #1f2937; }
+        .data-table tr:hover { background-color: #f9fafb; }
       `}</style>
       
       <header className="dashboard-header">
         <h1>Executive Overview</h1>
-        <p>Real-time insights into software assets and spend.</p>
+       
       </header>
 
       {/* KPI Cards Grid */}
       <div className="stats-grid">
         <StatCard
           title="Total Spend"
-          value={`$${stats.totalSpend?.toLocaleString()}`}
+          value={formatCurrency(stats.totalSpend)}
           icon={DollarSign}
-          color="#10b981" /* emerald-500 */
+          color="#10b981"
           delay={0.1}
         />
         <StatCard
           title="Total Licenses"
           value={stats.totalLicenses}
           icon={Package}
-          color="#3b82f6" /* blue-500 */
+          color="#3b82f6" 
           delay={0.2}
         />
         <StatCard
           title="Active Alerts"
           value={stats.activeAlerts}
           icon={ShieldAlert}
-          color="#ef4444" /* red-500 */
+          color="#ef4444" 
           delay={0.3}
         />
         <StatCard
           title="Tracked Devices"
           value={stats.totalDevices}
           icon={Server}
-          color="#a855f7" /* purple-500 */
+          color="#a855f7" 
           delay={0.4}
         />
       </div>
@@ -178,7 +133,7 @@ const Dashboard = () => {
                     <td style={{ fontWeight: 500 }}>{vendor.vendor}</td>
                     <td style={{ color: '#4b5563' }}>{vendor.count}</td>
                     <td style={{ fontWeight: 600 }}>
-                      ${vendor.totalCost?.toLocaleString()}
+                      {formatCurrency(vendor.totalCost)}
                     </td>
                   </tr>
                 ))

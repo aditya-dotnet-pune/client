@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
-import { LayoutDashboard, Server, ShieldCheck, FileBarChart, Monitor, ClipboardList, LogOut, Bell } from 'lucide-react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, Server, ShieldCheck, FileBarChart, Monitor, ClipboardList, LogOut, Bell, CalendarClock } from 'lucide-react';
 
 // Import Feature Components
 import Dashboard from './components/Reports/Dashboard';
@@ -8,37 +8,28 @@ import LicenseList from './components/Inventory/LicenseList';
 import LicenseForm from './components/Inventory/LicenseForm';
 import DeviceList from './components/Inventory/DeviceList';
 import DeviceForm from './components/Inventory/DeviceForm';
-import ComplianceDashboard from './components/Compliance/ComplianceDashboard'; // Now acts as Alerts
-import ComplianceReport from './components/Compliance/ComplianceReport'; // NEW
+import ComplianceDashboard from './components/Compliance/ComplianceDashboard'; 
+import ComplianceReport from './components/Compliance/ComplianceReport';
 import CostDashboard from './components/Reports/CostDashboard';
 import AuditLogViewer from './components/Reports/AuditLogViewer';
+import RenewalList from './components/Compliance/RenewalList';
 import Login from './components/Login';
-
-// Role Definitions (RBAC Configuration)
-const ROLE_PERMISSIONS = {
-  Admin: ['/', '/inventory', '/inventory/devices', '/compliance', '/alerts', '/reports', '/audit'],
-  Finance: ['/', '/reports'], 
-  Auditor: ['/', '/compliance', '/alerts', '/audit'], 
-};
 
 // Navigation Sidebar Component
 const Sidebar = ({ role, onLogout }) => {
   const location = useLocation();
   
-  // Define all possible menu items
   const allNavItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['Admin', 'Finance', 'Auditor'] },
-    { path: '/inventory', label: 'Software Catalog', icon: <Server size={20} />, roles: ['Admin'] },
-    { path: '/inventory/devices', label: 'Devices', icon: <Monitor size={20} />, roles: ['Admin'] },
-    // NEW: Compliance Table Page
-    { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} />, roles: ['Admin', 'Auditor'] },
-    // RENAMED: Old Compliance Dashboard is now Alerts
-    { path: '/alerts', label: 'Alerts', icon: <Bell size={20} />, roles: ['Admin', 'Auditor'] },
-    { path: '/reports', label: 'Finance', icon: <FileBarChart size={20} />, roles: ['Admin', 'Finance'] },
-    { path: '/audit', label: 'Audit Logs', icon: <ClipboardList size={20} />, roles: ['Admin', 'Auditor'] },
+    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['Admin', 'Finance', 'Auditor', 'Viewer'] },
+    { path: '/inventory', label: 'Software Catalog', icon: <Server size={20} />, roles: ['Admin', 'Viewer'] },
+    { path: '/inventory/devices', label: 'Devices', icon: <Monitor size={20} />, roles: ['Admin', 'Viewer'] },
+    { path: '/compliance', label: 'Compliance', icon: <ShieldCheck size={20} />, roles: ['Admin', 'Auditor', 'Viewer'] },
+    { path: '/alerts', label: 'Alerts', icon: <Bell size={20} />, roles: ['Admin', 'Auditor', 'Viewer'] },
+    { path: '/renewals', label: 'Renewals', icon: <CalendarClock size={20} />, roles: ['Admin', 'Finance', 'Viewer'] },
+    { path: '/reports', label: 'Finance', icon: <FileBarChart size={20} />, roles: ['Admin', 'Finance', 'Viewer'] },
+    { path: '/audit', label: 'Audit Logs', icon: <ClipboardList size={20} />, roles: ['Admin', 'Auditor', 'Viewer'] },
   ];
 
-  // Filter items based on current user role
   const allowedItems = allNavItems.filter(item => item.roles.includes(role));
 
   return (
@@ -161,7 +152,6 @@ const Sidebar = ({ role, onLogout }) => {
   );
 };
 
-// Protected Route Wrapper
 const ProtectedRoute = ({ role, allowedRoles, children }) => {
   if (!allowedRoles.includes(role)) {
     return <Navigate to="/" replace />;
@@ -169,92 +159,116 @@ const ProtectedRoute = ({ role, allowedRoles, children }) => {
   return children;
 };
 
-function App() {
+// Main Content Wrapper to allow using hooks
+const AppContent = () => {
   const [userRole, setUserRole] = useState(null); 
+  const navigate = useNavigate();
+
+  const handleLogin = (role) => {
+    setUserRole(role);
+    // Redirect based on role
+    if (role === 'Finance') navigate('/reports');
+    else if (role === 'Admin') navigate('/inventory');
+    else if (role === 'Auditor') navigate('/audit');
+    else navigate('/');
+  };
+
+  const handleLogout = () => {
+    setUserRole(null);
+    navigate('/');
+  };
 
   if (!userRole) {
-    return <Login onLogin={(role) => setUserRole(role)} />;
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
-    <Router>
-      <div className="app-container">
-        <style>{`
-          .app-container {
-            min-height: 100vh;
-            background-color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-          }
-          .main-content {
-            margin-left: 250px;
-            min-height: 100vh;
-          }
-        `}</style>
-        <Sidebar role={userRole} onLogout={() => setUserRole(null)} />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            
-            {/* Admin Only Routes */}
-            <Route path="/inventory" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <LicenseList />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory/new" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <LicenseForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory/edit/:id" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <LicenseForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory/devices" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <DeviceList />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory/devices/new" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <DeviceForm />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory/devices/edit/:id" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
-                <DeviceForm />
-              </ProtectedRoute>
-            } />
-            
-            {/* NEW: Compliance Table */}
-            <Route path="/compliance" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor']}>
-                <ComplianceReport />
-              </ProtectedRoute>
-            } />
+    <div className="app-container">
+      <style>{`
+        .app-container {
+          min-height: 100vh;
+          background-color: #f8fafc;
+          font-family: 'Inter', sans-serif;
+        }
+        .main-content {
+          margin-left: 250px;
+          min-height: 100vh;
+        }
+      `}</style>
+      <Sidebar role={userRole} onLogout={handleLogout} />
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={<Dashboard userRole={userRole} />} />
+          
+          <Route path="/inventory" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Viewer']}>
+              <LicenseList userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/inventory/new" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
+              <LicenseForm userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/inventory/edit/:id" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Viewer']}>
+              <LicenseForm userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/inventory/devices" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Viewer']}>
+              <DeviceList userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/inventory/devices/new" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin']}>
+              <DeviceForm userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/inventory/devices/edit/:id" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Viewer']}>
+              <DeviceForm userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/compliance" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor', 'Viewer']}>
+              <ComplianceReport userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          <Route path="/alerts" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor', 'Viewer']}>
+              <ComplianceDashboard userRole={userRole} />
+            </ProtectedRoute>
+          } />
 
-            {/* RENAMED: Alerts Dashboard */}
-            <Route path="/alerts" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor']}>
-                <ComplianceDashboard />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/reports" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Finance']}>
-                <CostDashboard />
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/audit" element={
-              <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor']}>
-                <AuditLogViewer />
-              </ProtectedRoute>
-            } />
-          </Routes>
-        </main>
-      </div>
+          <Route path="/renewals" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Finance', 'Viewer']}>
+              <RenewalList userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/reports" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Finance', 'Viewer']}>
+              <CostDashboard userRole={userRole} />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/audit" element={
+            <ProtectedRoute role={userRole} allowedRoles={['Admin', 'Auditor', 'Viewer']}>
+              <AuditLogViewer userRole={userRole} />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </main>
+    </div>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <AppContent />
     </Router>
   );
 }

@@ -18,6 +18,11 @@ api.interceptors.response.use(
   }
 );
 
+// NEW: Auth Service
+export const AuthService = {
+  login: (credentials) => api.post('/Auth/Login', credentials),
+};
+
 export const LicenseService = {
   getAll: () => api.get('/Licenses'),
   getById: (id) => api.get(`/Licenses/${id}`),
@@ -38,10 +43,7 @@ export const DeviceService = {
   onboard: (data) => api.post('/Devices', data),
   update: (id, data) => api.put(`/Devices/${id}`, data),
   delete: (id) => api.delete(`/Devices/${id}`),
-  
-  // Software Installation Endpoints
   installSoftware: (data) => api.post('/Devices/Install', data),
-  // NEW Methods
   deleteInstallation: (id) => api.delete(`/Devices/Install/${id}`),
   updateInstallation: (id, data) => api.put(`/Devices/Install/${id}`, data),
 };
@@ -54,9 +56,16 @@ export const ComplianceService = {
 export const ReportService = {
   getDashboard: () => api.get('/Reports/Dashboard'),
   getAllocations: () => api.get('/CostAllocation'),
-  createAllocation: (data) => api.post('/CostAllocation', data),
+  allocateByRule: (data) => api.post('/CostAllocation/AllocateByRule', data),
   getByDepartment: () => api.get('/CostAllocation/ByDepartment'),
   getLogs: () => api.get('/Audit'),
+};
+
+export const RenewalService = {
+  getAll: () => api.get('/Renewals'),
+  create: (data) => api.post('/Renewals', data),
+  updateStatus: (id, status) => api.put(`/Renewals/${id}/Status`, JSON.stringify(status)),
+  delete: (id) => api.delete(`/Renewals/${id}`),
 };
 
 export default api;
